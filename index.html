@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroShop - магазин техники</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<script src="script.js"></script>
+<div class="header">
+    <div class="logo">📱 ElectroShop</div>
+    <button class="cart-btn" id="openCartBtn">🛒 Корзина (<span id="cartCount">0</span>)</button>
+</div>
+
+<div class="container" style="max-width: 1200px; margin: 0 auto;">
+    <h2 style="margin-bottom: 20px;">🔥 Наши товары</h2>
+    <div class="products-grid" id="productsGrid"></div>
+</div>
+
+<!-- модальное окно -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <div id="modalSpecs" class="specs-full"></div>
+        <h3>📝 Отзывы:</h3>
+        <div id="modalReviews" class="reviews-list"></div>
+        <div class="add-review">
+            <input type="text" id="reviewName" placeholder="Ваше имя">
+            <select id="reviewRating">
+                <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                <option value="4">⭐⭐⭐⭐ 4</option>
+                <option value="3">⭐⭐⭐ 3</option>
+                <option value="2">⭐⭐ 2</option>
+                <option value="1">⭐ 1</option>
+            </select>
+            <textarea id="reviewText" rows="2" placeholder="Ваш отзыв..."></textarea>
+            <button id="addReviewBtn">Добавить отзыв</button>
+        </div>
+        <button id="modalAddToCart" style="margin-top: 15px;">➕ Добавить в корзину</button>
+    </div>
+</div>
+
+<!-- корзина -->
+<div id="cartSidebar" class="cart-sidebar">
+    <div class="cart-header">
+        <h3>🛒 Корзина</h3>
+        <span class="close" id="closeCartBtn" style="font-size: 24px; cursor: pointer;">&times;</span>
+    </div>
+    <div id="cartItems" class="cart-items">
+        <p style="text-align: center; color: #999;">Корзина пуста</p>
+    </div>
+    <div class="cart-total" id="cartTotal">Итого: 0 ₽</div>
+    <button id="checkoutBtn" style="background: #28a745; margin-top: 15px;">✅ Оформить заказ</button>
+</div>
+<div id="overlay" class="overlay"></div>
+
+<footer>
+    <p>ElectroShop — магазин современной техники</p>
+</footer>
+
+<script>
+    // ========== 12 ТОВАРОВ (4 старых + 8 новых реальных) ==========
+    const products = [
+        // 1. Samsung Galaxy S24 FE (был)
+        {
+            id: 1,
+            name: "Samsung Galaxy S24 FE",
+            price: 54990,
+            image: "https://avatars.mds.yandex.net/get-mpic/10255013/2a000001932f0458601b2e95da0c1741bc41/orig",
+            specs: {
+                "Экран": "6.7″ Dynamic AMOLED 2X, 120Hz",
+                "Процессор": "Exynos 2400e",
+                "Память": "8/128 ГБ",
+                "Камера": "50 МП + 12 МП + 8 МП",
+                "Батарея": "4700 мАч, 25W",
+                "ОС": "Android 14, One UI 6.1"
+            },
+            reviews: [
+                { author: "Анна", rating: 5, text: "Отличный телефон, камера шикарная!" },
+                { author: "Максим", rating: 4, text: "Хороший экран, но нагрев небольшой." }
+            ]
+        },
+        // 2. Ноутбук AORUS 16 BKF (был)
+        {
+            id: 2,
+            name: "Ноутбук AORUS 16 BKF",
+            price: 129990,
+            image: "https://c.dns-shop.ru/thumb/st4/fit/wm/0/0/269d2ec1170a175c3ad36a54e8713e61/2105aa2d7f6fdb26599804ce4571a7873a69dcc6460d6692a691e33589dd3abe.jpg.webp",
+            specs: {
+                "Экран": "16″ IPS, 165Hz, WQXGA",
+                "Процессор": "Intel Core i7-13650HX",
+                "Видеокарта": "NVIDIA RTX 4060 8GB",
+                "ОЗУ": "16GB DDR5",
+                "SSD": "1TB NVMe",
+                "Охлаждение": "Windforce Infinity"
+            },
+            reviews: [
+                { author: "Денис", rating: 5, text: "Тянет всё на ультра, доволен!" },
+                { author: "Ирина", rating: 5, text: "Для работы и игр идеален." }
+            ]
+        },
+        // 3. Samsung Galaxy Watch 6 (был)
+        {
+            id: 3,
+            name: "Samsung Galaxy Watch 6",
+            price: 18990,
+            image: "https://avatars.mds.yandex.net/get-mpic/11397991/2a0000018c5d57f946eeba0a84ea61cf6467/optimize",
+            specs: {
+                "Экран": "1.5″ Super AMOLED",
+                "Процессор": "Exynos W930",
+                "Память": "2GB + 16GB",
+                "Датчики": "Пульс, ЭКГ, SpO2",
+                "Батарея": "425 мАч",
+                "Защита": "5ATM + IP68"
+            },
+            reviews: [
+                { author: "Ольга", rating: 5, text: "Очень удобные, отслеживают сон отлично." },
+                { author: "Павел", rating: 4, text: "Хорошие часы, но заряда на 2 дня." }
+            ]
+        },
+        // 4. Sony WH-1000XM5 (был)
+        {
+            id: 4,
+            name: "Sony WH-1000XM5",
+            price: 28990,
+            image: "https://avatars.mds.yandex.net/get-mpic/12168282/2a0000018ef6810426181a64415ac69f54d7/optimize",
+            specs: {
+                "Тип": "Полноразмерные, беспроводные",
+                "Шумоподавление": "HD Noise Cancelling Processor QN1",
+                "Время работы": "30 часов (с ANC)",
+                "Зарядка": "USB-C, быстрая (3 мин = 3 часа)",
+                "Кодек": "LDAC, AAC, SBC"
+            },
+            reviews: [
+                { author: "Екатерина", rating: 5, text: "Лучшие наушники, шумоподавление топ!" },
+                { author: "Андрей", rating: 5, text: "Звук невероятный, очень удобные." }
+            ]
+        },
+        // 5. Apple iPhone 15 Pro Max (НОВЫЙ)
+        {
+            id: 5,
+            name: "Apple iPhone 15 Pro Max",
+            price: 124990,
+            image: "https://c.dns-shop.ru/thumb/st1/fit/500/500/e853c72719633e353b65193e301cc9e9/8517b5d57caefeef97194196729bd221e1606cafc9a005f423b21eb56314ba96.jpg.webp",
+            specs: {
+                "Экран": "6.7″ Super Retina XDR, ProMotion",
+                "Процессор": "A17 Pro (3 нм)",
+                "Память": "256 ГБ",
+                "Камера": "48 МП + 12 МП + 12 МП, LiDAR",
+                "Батарея": "4422 мАч, USB-C",
+                "ОС": "iOS 17"
+            },
+            reviews: [
+                { author: "Владимир", rating: 5, text: "Титан, камера нереальная!" },
+                { author: "Елена", rating: 5, text: "Лучший айфон за все время." }
+            ]
+        },
+        // 6. Xiaomi Robot Vacuum X10+ (НОВЫЙ)
+        {
+            id: 6,
+            name: "Xiaomi Robot Vacuum X10+",
+            price: 59990,
+            image: "https://c.dns-shop.ru/thumb/st1/fit/500/500/80ca614437b5c23d9170776ddeb18fc2/7b6cdb70ce3492b590c44c5abe1949391b6ee725ce2ddd8f710cf149c5609cd5.jpg.webp",
+            specs: {
+                "Тип": "Робот-пылесос с базой",
+                "Мощность": "4000 Па",
+                "Навигация": "LDS激光 + AI",
+                "Функции": "Влажная уборка, самоочистка",
+                "Батарея": "5200 мАч",
+                "Управление": "Wi-Fi, голосовые ассистенты"
+            },
+            reviews: [
+                { author: "Сергей", rating: 5, text: "Моет пол идеально, окупается за месяц." },
+                { author: "Мария", rating: 4, text: "Хорош, но громковат на максимуме." }
+            ]
+        },
+        // 7. iPad Pro 11″ M2 (НОВЫЙ)
+        {
+            id: 7,
+            name: "iPad Pro 11″ M5",
+            price: 121999,
+            image: "https://c.dns-shop.ru/thumb/st1/fit/500/500/762a2ef7919d986eb802474832bb994f/fea2ff1a3a34bb949d11c6a5be8ba9c4d7afc212ef2cfe0a5171f3513690c099.jpg.webp",
+            specs: {
+                "Экран": "11″ Liquid Retina, 120Hz",
+                "Процессор": "Apple M2",
+                "Память": "8/256 ГБ",
+                "Камера": "12 МП + LiDAR",
+                "Батарея": "28.65 Вт·ч",
+                "ОС": "iPadOS 17"
+            },
+            reviews: [
+                { author: "Олег", rating: 5, text: "Для рисования и монтажа — бомба." },
+                { author: "Алиса", rating: 5, text: "Замена ноутбуку на 90%." }
+            ]
+        },
+        // 8. Yandex Station Max (НОВЫЙ)
+        {
+            id: 8,
+            name: "Yandex Station Max",
+            price: 26990,
+            image: "https://c.dns-shop.ru/thumb/st1/fit/wm/0/0/749cd68a15d9ecb0772d6f835c462ae7/8b2410dbffce564acb0a2111b136bb41d99e397355a83c9a4aa9a5330c1deb8e.jpg.webp",
+            specs: {
+                "Тип": "Умная колонка с экраном",
+                "Экран": "10″ HD",
+                "Звук": "30 Вт, 2 динамика",
+                "Голосовой ассистент": "Алиса",
+                "Управление": "Умный дом, Zigbee",
+                "ОС": "Yandex OS"
+            },
+            reviews: [
+                { author: "Артём", rating: 5, text: "Звук мощный, Алиса понимает всё." },
+                { author: "Наталья", rating: 4, text: "Экран хороший, но немного тормозит." }
+            ]
+        },
+        // 9. PlayStation 5 Slim (НОВЫЙ)
+        {
+            id: 9,
+            name: "Sony PlayStation 5 Slim",
+            price: 49990,
+            image: "https://c.dns-shop.ru/thumb/st1/fit/wm/0/0/562a40c7aaf0eea137a4e201fe74912d/84cf1a12a3a79953cebfba38182df1a14449d71d52da68cbcfdffc594cfd6bf8.jpg.webp",
+            specs: {
+                "Процессор": "AMD Zen 2, 8 ядер",
+                "Графика": "RDNA 2, 10.28 TFLOPS",
+                "Память": "16GB GDDR6",
+                "SSD": "1TB PCIe 4.0",
+                "Поддержка": "8K, трассировка лучей",
+                "Привод": "Ultra HD Blu-ray"
+            },
+            reviews: [
+                { author: "Игрок77", rating: 5, text: "Стимдек отдыхает, PS5 рулит!" },
+                { author: "Дмитрий", rating: 5, text: "Новая версия компактнее и тише." }
+            ]
+        },
+        // 10. Apple AirPods Pro 2 (НОВЫЙ)
+        {
+            id: 10,
+            name: "Apple AirPods Pro 2",
+            price: 22990,
+            image: "https://c.dns-shop.ru/thumb/st4/fit/wm/0/0/3908093ea7d4c4fbdcd0adcfd5769327/4b1c1955a2530fa2de2ad1f4faa496f553779822690c1505f5400e6c34a1dbe1.jpg.webp",
+            specs: {
+                "Тип": "Внутриканальные TWS",
+                "Шумоподавление": "Активное, H2 чип",
+                "Время работы": "6 часов (до 30 с кейсом)",
+                "Зарядка": "MagSafe, USB-C",
+                "Чип": "H2 + U1",
+                "Защита": "IP54"
+            },
+            reviews: [
+                { author: "Игорь", rating: 5, text: "Шумодав лучше всех." },
+                { author: "Оксана", rating: 5, text: "Звук чистый, сидят удобно." }
+            ]
+        },
+        // 11. Huawei FreeBuds Pro 3 (НОВЫЙ)
+        {
+            id: 11,
+            name: "Huawei FreeBuds Pro 3",
+            price: 15990,
+            image: "https://c.dns-shop.ru/thumb/st1/fit/wm/0/0/390796ec6b7a516b0e955362348aab85/725f9eaaa9f77e74cba9b192629d632dddafb38fa090086bf888b27354efc386.jpg.webp",
+            specs: {
+                "Тип": "Внутриканальные TWS",
+                "Шумоподавление": "Intelligent Dynamic ANC 3.0",
+                "Звук": "Ultra-Frequency",
+                "Кодеки": "LDAC, AAC",
+                "Батарея": "6.5 часов, с кейсом 31 час",
+                "Защита": "IP54"
+            },
+            reviews: [
+                { author: "Денис", rating: 5, text: "Отличный звук через LDAC." },
+                { author: "Татьяна", rating: 4, text: "Хорошие, но управление привыкать." }
+            ]
+        },
+        // 12. Samsung Galaxy Tab S9 Ultra (НОВЫЙ)
+        {
+            id: 12,
+            name: "Samsung Galaxy Tab S9 Ultra",
+            price: 109990,
+            image: "https://c.dns-shop.ru/thumb/st4/fit/wm/0/0/146fe3007bbe62ebc0814b0fd0c44cc8/d5caa147e9bbe851e905af17ef052c8619e3d8528eb7a79d2dacc98b26708b2a.jpg.webp",
+            specs: {
+                "Экран": "14.6″ Dynamic AMOLED 2X, 120Hz",
+                "Процессор": "Snapdragon 8 Gen 2 for Galaxy",
+                "Память": "12/256 ГБ",
+                "Камера": "13 МП + 8 МП (ультраширик)",
+                "Батарея": "11200 мАч",
+                "Перо": "S Pen в комплекте"
+            },
+            reviews: [
+                { author: "Максим", rating: 5, text: "Лучший планшет для работы." },
+                { author: "Евгения", rating: 5, text: "Экран огромный, батарея живёт вечно." }
+            ]
+        }
+    ];
+
+    </script>
+</body>
+</html>
